@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:16.2
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lenextra
+      POSTGRES_USER: lenextra
+      POSTGRES_PASSWORD: lenextra
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  web:
+    build: .
+    working_dir: /code
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DJANGO_SETTINGS_MODULE: lenextra.settings.prod
+      DATABASE_URL: postgres://lenextra:lenextra@db:5432/lenextra
+    volumes:
+      - .:/code
+    expose:
+      - "9001"
+    command: >
+      bash -lc "
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput &&
+      daphne -b 0.0.0.0 -p 9001 lenextra.asgi:application
+      "
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      web:
+        condition: service_started
+    volumes:
+      - ./config/nginx:/etc/nginx/templates
+      - .:/code
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:

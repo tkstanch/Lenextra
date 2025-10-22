@@ -1,0 +1,27 @@
+{% comment %}Works with "competitions" or "object_list" without errors{% endcomment %}
+{% firstof competitions object_list as items %}
+{% if items %}
+  <div class="table-responsive">
+    <table class="table" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr><th>Name</th><th>Starts</th><th>Ends</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for c in items %}
+          <tr>
+            <td>{{ c.name|default:c.title|default:"Competition" }}</td>
+            <td>{% if c.start_date %}{{ c.start_date|date:"M d, Y" }}{% else %}—{% endif %}</td>
+            <td>{% if c.end_date %}{{ c.end_date|date:"M d, Y" }}{% else %}—{% endif %}</td>
+            <td>{{ c.status|default:"—" }}</td>
+            <td style="text-align:right;white-space:nowrap;">
+              {% if c.get_absolute_url %}<a href="{{ c.get_absolute_url }}">View</a>
+              {% else %}<a href="{% url 'competitions:landing' %}?id={{ c.pk }}">View</a>{% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <p class="muted">No competitions available.</p>
+{% endif %}

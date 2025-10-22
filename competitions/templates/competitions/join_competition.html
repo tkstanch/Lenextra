@@ -1,0 +1,26 @@
+{% if form %}
+  <form method="post" action="." novalidate>
+    {% csrf_token %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;">
+      {% for field in form.visible_fields %}
+        <label>
+          <span style="font-size:.9rem;color:#374151;">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+          {{ field }}
+          {% if field.help_text %}<div class="muted" style="font-size:.85rem;">{{ field.help_text }}</div>{% endif %}
+          {% for err in field.errors %}<div style="color:#b91c1c;font-size:.9rem;">{{ err }}</div>{% endfor %}
+        </label>
+      {% endfor %}
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+    </div>
+    {% if form.non_field_errors %}
+      <div style="color:#b91c1c;margin-top:.5rem;">
+        {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    <div style="margin-top:.75rem;">
+      <button type="submit" class="btn" style="padding:.5rem .8rem;border:1px solid #111827;background:#111827;color:#fff;border-radius:6px;">Join</button>
+    </div>
+  </form>
+{% else %}
+  <p class="muted">Joining form is unavailable.</p>
+{% endif %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Competitions{% endblock %}
+{% block content %}
+  {% include "competitions/_messages.html" %}
+  <h1>Competitions</h1>
+  <p class="muted">Overview</p>
+
+  <section style="margin:1rem 0;">
+    <h2 style="margin:.25rem 0;">Competition List</h2>
+    {% include "competitions/competition_list.html" %}
+  </section>
+
+  <section style="margin:1rem 0;">
+    <h2 style="margin:.25rem 0;">Join Competition</h2>
+    {% include "competitions/join_competition.html" %}
+  </section>
+
+  <section style="margin:1rem 0;">
+    <h2 style="margin:.25rem 0;">Competition Detail</h2>
+    {% if competition %}
+      {% include "competitions/competition_detail.html" %}
+    {% else %}
+      <p class="muted">Select a competition to see details.</p>
+    {% endif %}
+  </section>
+{% endblock %}

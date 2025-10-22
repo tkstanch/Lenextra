@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if form.instance.pk %}Edit Competition{% else %}Create Competition{% endif %}{% endblock %}
+{% block content %}
+  {% include "competitions/_messages.html" %}
+  <h1>{% if form.instance.pk %}Edit Competition{% else %}Create Competition{% endif %}</h1>
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div style="color:#b91c1c;margin-bottom:.75rem;">
+        {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.9rem;">
+      {% for field in form.visible_fields %}
+        <label style="display:block;">
+          <div style="font-size:.9rem;color:#374151;margin-bottom:.25rem;">
+            {{ field.label }}{% if field.field.required %} *{% endif %}
+          </div>
+          {{ field }}
+          {% if field.help_text %}<div class="muted" style="font-size:.85rem;margin-top:.2rem;">{{ field.help_text }}</div>{% endif %}
+          {% for err in field.errors %}<div style="color:#b91c1c;font-size:.9rem;margin-top:.25rem;">{{ err }}</div>{% endfor %}
+        </label>
+      {% endfor %}
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:.5rem;">
+      <button type="submit" class="btn" style="padding:.55rem .9rem;border-radius:6px;border:1px solid #111827;background:#111827;color:#fff;">Save</button>
+      <a href="{% url 'competitions:landing' %}" class="btn" style="padding:.55rem .9rem;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827;">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

@@ -21,19 +21,14 @@ static_collected/
 
 # VS Code
 .vscode/
-.history/
 
-# Docker
-.pgdata/
-docker-data/
-**/node_modules/
+# Tests/tools caches
 **/.pytest_cache/
 .mypy_cache/
 .coverage
 htmlcov/
 
-# Git
-*.orig
-
-# Runtime data
+# Docker/runtime data
 data/
+.pgdata/
+docker-data/

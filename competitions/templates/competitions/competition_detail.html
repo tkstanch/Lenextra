@@ -1,0 +1,16 @@
+{% comment %}Works with context var "competition" or "object"{% endcomment %}
+{% with c=competition|default:object %}
+  {% if c %}
+    <div class="card" style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#fff;">
+      <h3 style="margin-top:0;">{{ c.name|default:c.title|default:"Competition" }}</h3>
+      {% if c.description %}<p>{{ c.description }}</p>{% endif %}
+      <ul style="list-style:none;padding:0;margin:.5rem 0;">
+        <li><strong>Starts:</strong> {% if c.start_date %}{{ c.start_date|date:"M d, Y" }}{% else %}—{% endif %}</li>
+        <li><strong>Ends:</strong> {% if c.end_date %}{{ c.end_date|date:"M d, Y" }}{% else %}—{% endif %}</li>
+        {% if c.status %}<li><strong>Status:</strong> {{ c.status|title }}</li>{% endif %}
+      </ul>
+    </div>
+  {% else %}
+    <p class="muted">Select a competition to see details.</p>
+  {% endif %}
+{% endwith %}
