@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Edit Student Profile{% endblock %}
+{% block content %}
+<h1>Edit Student Profile</h1>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-success" type="submit">Save</button>
+</form>
+<p class="text-muted">Tip: expose university and college fields in the StudentProfileForm fields list to show them here.</p>
+{% endblock %}

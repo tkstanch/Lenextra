@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Tracked Students{% endblock %}
+{% block content %}
+<h1>Tracked Students</h1>
+<p><a class="btn btn-primary" href="{% url 'organizations:track_student' %}">Track a Student</a></p>
+<table>
+  <thead><tr><th>Student</th><th>School</th><th>Stage</th><th>Last Contacted</th></tr></thead>
+  <tbody>
+    {% for t in trackings %}
+      <tr>
+        <td>{{ t.student.user.get_full_name|default:t.student.user.username }}</td>
+        <td>{{ t.student.school.name if t.student.school }}</td>
+        <td>{{ t.get_stage_display }}</td>
+        <td>{{ t.last_contacted|default:"Never" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">No tracked students.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

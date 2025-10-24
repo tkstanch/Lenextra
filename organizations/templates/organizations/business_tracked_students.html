@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Tracked Students — {{ business.name }}{% endblock %}
+
+{% block content %}
+  {% include "organizations/_messages.html" %}
+
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <h1 style="margin:0;">Tracked Students — {{ business.name }}</h1>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+      <a class="btn" href="{% url 'organizations:track_student_slug' business.slug %}">+ Track a Student</a>
+      <button id="exportCsvBtn" class="btn btn-secondary" type="button">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="filters" style="margin:1rem 0;display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+    <div>
+      <label for="searchInput">Search</label><br>
+      <input id="searchInput" type="search" placeholder="Search student or school…" value="{{ request.GET.q|default:'' }}" />
+    </div>
+    <div>
+      <label for="stageFilter">Stage</label><br>
+      <select id="stageFilter">
+        <option value="">All stages</option>
+        <option value="interested">Interested</option>
+        <option value="shortlisted">Shortlisted</option>
+        <option value="interviewing">Interviewing</option>
+        <option value="offered">Offered</option>
+        <option value="hired">Hired</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+    <div style="margin-left:auto;">
+      <span id="rowCount"></span>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table id="trackedTable" class="table">
+      <thead>
+        <tr>
+          <th style="min-width:200px;">Student</th>
+          <th>School</th>
+          <th>Stage</th>
+          <th>Last Contacted</th>
+          <th>Reason</th>
+          <th>Source</th>
+          <th style="min-width:120px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tracked %}
+          <tr
+            data-stage="{{ t.stage }}"
+            data-student="{{ t.student.user.get_full_name|default:t.student.user.username }}"
+            data-school="{{ t.student.school.name|default:'-' }}"
+          >
+            <td>
+              <a href="{% url 'organizations:student_detail' t.student.pk %}">
+                {{ t.student.user.get_full_name|default:t.student.user.username }}
+              </a>
+            </td>
+            <td>{{ t.student.school.name|default:"-" }}</td>
+            <td>
+              {% if t.stage == 'interested' %}
+                <span class="badge" style="background:#eef; color:#223;">Interested</span>
+              {% elif t.stage == 'shortlisted' %}
+                <span class="badge" style="background:#e6f4ea; color:#1e4620;">Shortlisted</span>
+              {% elif t.stage == 'interviewing' %}
+                <span class="badge" style="background:#fff3cd; color:#664d03;">Interviewing</span>
+              {% elif t.stage == 'offered' %}
+                <span class="badge" style="background:#d1ecf1; color:#0c5460;">Offered</span>
+              {% elif t.stage == 'hired' %}
+                <span class="badge" style="background:#d4edda; color:#155724;">Hired</span>
+              {% elif t.stage == 'rejected' %}
+                <span class="badge" style="background:#f8d7da; color:#721c24;">Rejected</span>
+              {% else %}
+                <span class="badge">{{ t.stage }}</span>
+              {% endif %}
+            </td>
+            <td>{{ t.last_contacted|date:"Y-m-d H:i" }}</td>
+            <td>{{ t.tracking_reason|default:"-" }}</td>
+            <td>{{ t.source|default:"-" }}</td>
+            <td>
+              <a href="{% url 'organizations:tracking_update' business.slug t.pk %}">Edit</a> ·
+              <a href="{% url 'organizations:tracking_delete' business.slug t.pk %}">Delete</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7">No tracked students yet. Click “Track a Student” to add one.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <style>
+    .btn { padding:.5rem .75rem; border:1px solid #ccc; border-radius:4px; text-decoration:none; display:inline-block; }
+    .btn-secondary { background:#f6f6f6; }
+    .badge { padding:.15rem .4rem; border-radius:.25rem; font-size:.85em; white-space:nowrap; }
+    .table { width:100%; border-collapse:collapse; }
+    .table th, .table td { padding:.6rem; border-bottom:1px solid #eee; text-align:left; }
+    .table thead th { border-bottom:2px solid #ddd; }
+    .table-responsive { overflow-x:auto; }
+    .page-header .btn { margin-left:.25rem; }
+    label { font-size:.9rem; color:#333; }
+    input[type="search"], select { padding:.4rem .5rem; border:1px solid #ccc; border-radius:4px; }
+  </style>
+
+  <script>
+    (function () {
+      const table = document.getElementById('trackedTable');
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const stageFilter = document.getElementById('stageFilter');
+      const searchInput = document.getElementById('searchInput');
+      const rowCount = document.getElementById('rowCount');
+      const exportBtn = document.getElementById('exportCsvBtn');
+
+      function normalize(s) {
+        return (s || '').toString().toLowerCase().trim();
+      }
+
+      function applyFilters() {
+        const stage = stageFilter.value;
+        const q = normalize(searchInput.value);
+        let visible = 0;
+
+        rows.forEach(tr => {
+          const trStage = tr.getAttribute('data-stage');
+          const student = normalize(tr.getAttribute('data-student'));
+          const school = normalize(tr.getAttribute('data-school'));
+
+          const stageOk = !stage || stage === trStage;
+          const searchOk = !q || student.includes(q) || school.includes(q);
+
+          const show = stageOk && searchOk;
+          tr.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+
+        rowCount.textContent = visible + ' of ' + rows.length;
+      }
+
+      stageFilter.addEventListener('change', applyFilters);
+      searchInput.addEventListener('input', applyFilters);
+
+      // Initial counts
+      applyFilters();
+
+      // CSV export (visible rows)
+      exportBtn?.addEventListener('click', () => {
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+        const visibleRows = rows.filter(tr => tr.style.display !== 'none');
+        const body = visibleRows.map(tr => {
+          const cells = Array.from(tr.children).slice(0, 6); // exclude Actions col
+          return cells.map(td => {
+            const text = td.innerText.replace(/\s+/g, ' ').trim();
+            // quote CSV fields
+            return `"${text.replace(/"/g, '""')}"`;
+          }).join(',');
+        });
+        const csv = [headers.slice(0, 6).join(','), ...body].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tracked_students_{{ business.slug }}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    })();
+  </script>
+{% endblock %}

@@ -1,0 +1,82 @@
+[
+{
+  "model": "courses.subject",
+  "pk": 1,
+  "fields": {
+    "title": "Mathematics",
+    "slug": "mathematics"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 2,
+  "fields": {
+    "title": "Combined Science",
+    "slug": "combined-science"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 3,
+  "fields": {
+    "title": "English",
+    "slug": "english"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 4,
+  "fields": {
+    "title": "Accounting",
+    "slug": "accounting"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 5,
+  "fields": {
+    "title": "Shona",
+    "slug": "shona"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 6,
+  "fields": {
+    "title": "Commerce",
+    "slug": "commerce"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 7,
+  "fields": {
+    "title": "Programming",
+    "slug": "programming"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 8,
+  "fields": {
+    "title": "Robotics",
+    "slug": "robotics"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 9,
+  "fields": {
+    "title": "Open source intelligence(OSINT)",
+    "slug": "open-source-intelligence-osint"
+  }
+},
+{
+  "model": "courses.subject",
+  "pk": 10,
+  "fields": {
+    "title": "Hacking",
+    "slug": "hacking"
+  }
+}
+]

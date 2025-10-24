@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Manage Appointments{% endblock %}
+
+{% block content %}
+  {% if messages %}
+    <div class="messages">
+      {% for message in messages %}
+        <div class="alert {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <h1 style="margin:0;">Manage Appointments</h1>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+      {% comment %} Adjust these URLs to your courses URLs if they differ {% endcomment %}
+      <a class="btn" href="{% url 'courses:appointment_create' %}">+ New Appointment</a>
+      <button id="exportCsvBtn" class="btn btn-secondary" type="button">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="filters" style="margin:1rem 0;display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+    <div>
+      <label for="searchInput">Search</label><br>
+      <input id="searchInput" type="search" placeholder="Title, course, student, instructor, location…" />
+    </div>
+
+    <div>
+      <label for="statusFilter">Status</label><br>
+      <select id="statusFilter">
+        <option value="">All</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="dateFrom">From</label><br>
+      <input id="dateFrom" type="date" />
+    </div>
+    <div>
+      <label for="dateTo">To</label><br>
+      <input id="dateTo" type="date" />
+    </div>
+
+    <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center;">
+      <span id="rowCount"></span>
+    </div>
+  </div>
+
+  <form id="bulkForm" method="post" action="">
+    {% csrf_token %}
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.25rem 0 1rem;">
+      <select name="bulk_action" id="bulkAction" style="min-width:180px;">
+        <option value="">Bulk action…</option>
+        <option value="confirm">Mark as Confirmed</option>
+        <option value="complete">Mark as Completed</option>
+        <option value="cancel">Mark as Cancelled</option>
+        <option value="delete">Delete</option>
+      </select>
+      <input type="hidden" name="selected_ids" id="selectedIds" />
+      <button class="btn btn-secondary" type="submit" id="applyBulk">Apply</button>
+    </div>
+
+    <div class="table-responsive">
+      <table id="appointmentsTable" class="table">
+        <thead>
+          <tr>
+            <th style="width:36px;"><input id="selectAll" type="checkbox" aria-label="Select all" /></th>
+            <th data-sort="title" class="sortable">Title</th>
+            <th data-sort="course" class="sortable">Course</th>
+            <th data-sort="student" class="sortable">Student</th>
+            <th data-sort="instructor" class="sortable">Instructor</th>
+            <th data-sort="start" class="sortable">Start</th>
+            <th data-sort="end" class="sortable">End</th>
+            <th data-sort="location" class="sortable">Location</th>
+            <th data-sort="status" class="sortable">Status</th>
+            <th style="min-width:120px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for appt in appointments %}
+            <tr
+              data-id="{{ appt.id }}"
+              data-title="{{ appt.title|default:'' }}"
+              data-course="{{ appt.course|default:'' }}"
+              data-student="{{ appt.student|default:'' }}"
+              data-instructor="{{ appt.instructor|default:'' }}"
+              data-location="{{ appt.location|default:'' }}"
+              data-status="{{ appt.status|default:''|lower }}"
+              data-start="{{ appt.start_time|date:'c' }}"
+              data-end="{{ appt.end_time|date:'c' }}"
+            >
+              <td><input type="checkbox" class="rowChk" value="{{ appt.id }}" aria-label="Select appointment {{ appt.id }}" /></td>
+              <td>{{ appt.title|default:"—" }}</td>
+              <td>{{ appt.course|default:"—" }}</td>
+              <td>{{ appt.student|default:"—" }}</td>
+              <td>{{ appt.instructor|default:"—" }}</td>
+              <td>{{ appt.start_time|date:"Y-m-d H:i" }}</td>
+              <td>{{ appt.end_time|date:"Y-m-d H:i" }}</td>
+              <td>{{ appt.location|default:"—" }}</td>
+              <td>
+                {% with s=appt.status|lower %}
+                  {% if s == 'confirmed' %}
+                    <span class="badge badge-confirmed">Confirmed</span>
+                  {% elif s == 'pending' %}
+                    <span class="badge badge-pending">Pending</span>
+                  {% elif s == 'completed' %}
+                    <span class="badge badge-completed">Completed</span>
+                  {% elif s == 'cancelled' %}
+                    <span class="badge badge-cancelled">Cancelled</span>
+                  {% else %}
+                    <span class="badge">{{ appt.status|default:"—" }}</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <td>
+                <div class="actions">
+                  <a href="{% url 'courses:appointment_detail' appt.id %}">View</a>
+                  · <a href="{% url 'courses:appointment_update' appt.id %}">Edit</a>
+                  · <a href="{% url 'courses:appointment_delete' appt.id %}">Delete</a>
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="10">No appointments found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </form>
+
+  {% if appointments.has_other_pages %}
+    <nav class="pagination" aria-label="Pagination" style="margin-top:1rem;">
+      <ul style="display:flex;gap:.5rem;list-style:none;padding:0;">
+        {% if appointments.has_previous %}
+          <li><a class="btn btn-secondary" href="?page={{ appointments.previous_page_number }}">« Prev</a></li>
+        {% else %}
+          <li><span class="btn btn-secondary" aria-disabled="true">« Prev</span></li>
+        {% endif %}
+        <li><span>Page {{ appointments.number }} of {{ appointments.paginator.num_pages }}</span></li>
+        {% if appointments.has_next %}
+          <li><a class="btn btn-secondary" href="?page={{ appointments.next_page_number }}">Next »</a></li>
+        {% else %}
+          <li><span class="btn btn-secondary" aria-disabled="true">Next »</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+
+  <style>
+    .btn { padding:.45rem .7rem; border:1px solid #cfcfcf; border-radius:6px; text-decoration:none; display:inline-block; background:#fff; color:#222; }
+    .btn-secondary { background:#f7f7f7; }
+    .alert { padding:.6rem .8rem; border:1px solid #eee; border-radius:6px; margin:.5rem 0; }
+    .table { width:100%; border-collapse:collapse; }
+    .table th, .table td { padding:.55rem .6rem; border-bottom:1px solid #eee; text-align:left; vertical-align:top; }
+    .table thead th { border-bottom:2px solid #ddd; user-select:none; }
+    .table-responsive { overflow-x:auto; }
+    .sortable { cursor:pointer; position:relative; }
+    .sortable::after { content:'⇅'; font-size:.8em; color:#888; margin-left:.3rem; }
+    .badge { padding:.2rem .45rem; border-radius:.35rem; font-size:.85em; white-space:nowrap; border:1px solid transparent; }
+    .badge-confirmed { background:#e6f4ea; color:#1e4620; border-color:#b7e1c0; }
+    .badge-pending { background:#fff3cd; color:#664d03; border-color:#ffe08a; }
+    .badge-completed { background:#e8f0fe; color:#174ea6; border-color:#c6dafc; }
+    .badge-cancelled { background:#fde7e9; color:#a50e0e; border-color:#f7c1c6; }
+    input[type="search"], select, input[type="date"] { padding:.4rem .5rem; border:1px solid #ccc; border-radius:6px; }
+  </style>
+
+  <script>
+    (function () {
+      const $ = (s, c=document) => c.querySelector(s);
+      const $$ = (s, c=document) => Array.from(c.querySelectorAll(s));
+      const norm = s => (s || '').toString().toLowerCase().trim();
+
+      const table = $('#appointmentsTable');
+      const rows = $$('#appointmentsTable tbody tr');
+      const searchInput = $('#searchInput');
+      const statusFilter = $('#statusFilter');
+      const dateFrom = $('#dateFrom');
+      const dateTo = $('#dateTo');
+      const rowCount = $('#rowCount');
+      const exportBtn = $('#exportCsvBtn');
+
+      const chkAll = $('#selectAll');
+      const chks = $$('.rowChk');
+      const bulkForm = $('#bulkForm');
+      const bulkAction = $('#bulkAction');
+      const selectedIds = $('#selectedIds');
+
+      function parseDateOnly(val) {
+        if (!val) return null;
+        try { return new Date(val + 'T00:00:00'); } catch (e) { return null; }
+      }
+
+      function applyFilters() {
+        const q = norm(searchInput.value);
+        const st = norm(statusFilter.value);
+        const from = parseDateOnly(dateFrom.value);
+        const to = parseDateOnly(dateTo.value);
+        let visible = 0;
+
+        rows.forEach(tr => {
+          const title = norm(tr.dataset.title);
+          const course = norm(tr.dataset.course);
+          const student = norm(tr.dataset.student);
+          const instructor = norm(tr.dataset.instructor);
+          const location = norm(tr.dataset.location);
+          const status = norm(tr.dataset.status);
+          const start = new Date(tr.dataset.start);
+
+          const textOk = !q || [title, course, student, instructor, location].some(v => v.includes(q));
+          const statusOk = !st || status === st;
+
+          let dateOk = true;
+          if (from && start < from) dateOk = false;
+          if (to) {
+            const toInclusive = new Date(to); toInclusive.setHours(23,59,59,999);
+            if (start > toInclusive) dateOk = false;
+          }
+
+          const show = textOk && statusOk && dateOk;
+          tr.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+
+        rowCount.textContent = `${visible} of ${rows.length}`;
+      }
+
+      function getVisibleRows() {
+        return rows.filter(tr => tr.style.display !== 'none');
+      }
+
+      function exportCSV() {
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+        const visibleRows = getVisibleRows();
+        const body = visibleRows.map(tr => {
+          const cells = Array.from(tr.children).slice(1, 9); // skip checkbox, stop before Actions
+          return cells.map(td => `"${td.innerText.replace(/\s+/g, ' ').trim().replace(/"/g, '""')}"`).join(',');
+        });
+        const csv = [headers.slice(1, 9).join(','), ...body].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'appointments.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      // Sorting
+      let sortState = { key: null, dir: 1 }; // 1 asc, -1 desc
+      function compare(a, b, key) {
+        if (key === 'start' || key === 'end') {
+          return (new Date(a.dataset[key])) - (new Date(b.dataset[key]));
+        }
+        return a.dataset[key].localeCompare(b.dataset[key], undefined, { sensitivity: 'base' });
+      }
+      function sortBy(key) {
+        const dir = (sortState.key === key) ? -sortState.dir : 1;
+        sortState = { key, dir };
+        const tbody = table.querySelector('tbody');
+        const sorted = rows.slice().sort((a, b) => compare(a, b, key) * dir);
+        sorted.forEach(tr => tbody.appendChild(tr));
+      }
+
+      // Bulk
+      chkAll.addEventListener('change', () => {
+        getVisibleRows().forEach(tr => {
+          const chk = tr.querySelector('.rowChk');
+          if (chk) chk.checked = chkAll.checked;
+        });
+      });
+
+      bulkForm.addEventListener('submit', (e) => {
+        const ids = $$('.rowChk').filter(c => c.checked).map(c => c.value);
+        if (!bulkAction.value) {
+          e.preventDefault();
+          alert('Choose a bulk action first.');
+          return;
+        }
+        if (ids.length === 0) {
+          e.preventDefault();
+          alert('Select at least one appointment.');
+          return;
+        }
+        selectedIds.value = ids.join(',');
+        if (bulkAction.value === 'delete' && !confirm('Delete selected appointments?')) {
+          e.preventDefault();
+        }
+      });
+
+      // Events
+      searchInput.addEventListener('input', applyFilters);
+      statusFilter.addEventListener('change', applyFilters);
+      dateFrom.addEventListener('change', applyFilters);
+      dateTo.addEventListener('change', applyFilters);
+      exportBtn.addEventListener('click', exportCSV);
+      $$('.sortable').forEach(th => th.addEventListener('click', () => sortBy(th.dataset.sort)));
+
+      // Init
+      applyFilters();
+    })();
+  </script>
+{% endblock %}

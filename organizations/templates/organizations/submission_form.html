@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Submit Work{% endblock %}
+{% block content %}
+<h1>Submit Work</h1>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {{ form.as_p }}
+  <div>
+    <label for="id_url">Link (optional)</label>
+    <input type="url" name="url" id="id_url" value="{{ form.initial.url }}">
+  </div>
+  <div>
+    <label for="id_content">Notes (optional)</label>
+    <textarea name="content" id="id_content" rows="5">{{ form.initial.content }}</textarea>
+  </div>
+  <button class="btn btn-success" type="submit">Submit</button>
+</form>
+{% endblock %}

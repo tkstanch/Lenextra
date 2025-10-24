@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}{% load humanize %}
+
+{% block content %}
+<div class="container" style="max-width:1100px;margin:1.5rem auto;padding:0 1rem;">
+  <header style="margin-bottom:1rem;">
+    <h1 style="margin:0;">{{ student.user.get_full_name|default:student.user.username|default:"Student" }}</h1>
+    <p class="muted" style="margin:.25rem 0 0;">Overview of reading and activity</p>
+  </header>
+
+  <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;">
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;">
+        <div class="muted" style="font-size:.85rem;">Lessons (7d)</div>
+        <div style="font-size:1.4rem;font-weight:700;">{{ kpis.w_lessons|default:0 }}</div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;">
+        <div class="muted" style="font-size:.85rem;">Minutes (7d)</div>
+        <div style="font-size:1.4rem;font-weight:700;">{{ kpis.w_minutes|default:0 }}</div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;">
+        <div class="muted" style="font-size:.85rem;">Avg score (7d)</div>
+        <div style="font-size:1.4rem;font-weight:700;">{% if kpis.w_avg_score %}{{ kpis.w_avg_score|floatformat:1 }}%{% else %}—{% endif %}</div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;">
+        <div class="muted" style="font-size:.85rem;">Avg progress (7d)</div>
+        <div style="font-size:1.4rem;font-weight:700;">{% if kpis.w_avg_progress %}{{ kpis.w_avg_progress|floatformat:0 }}%{% else %}—{% endif %}</div>
+      </div>
+      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;">
+        <div class="muted" style="font-size:.85rem;">Streak</div>
+        <div style="font-size:1.4rem;font-weight:700;">{{ streak }} day{% if streak != 1 %}s{% endif %}</div>
+      </div>
+    </div>
+    <div style="margin-top:.75rem;color:#6b7280;">
+      30‑day totals: {{ kpis.m_lessons|default:0 }} lessons • {{ kpis.m_minutes|default:0 }} min
+    </div>
+  </section>
+
+  <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;margin-top:1rem;">
+    <div style="display:flex;gap:.5rem;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+      <h3 style="margin:0;">Recent entries</h3>
+      <div>
+        <a href="{% url 'parents:progress_add' %}" class="btn" style="padding:.45rem .7rem;border-radius:6px;border:1px solid #111827;background:#111827;color:#fff;">Add entry</a>
+        <a href="{% url 'parents:progress_list' student.id %}" class="btn" style="padding:.45rem .7rem;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827;">View all</a>
+      </div>
+    </div>
+    {% if recent_entries %}
+      <div style="overflow:auto;margin-top:.5rem;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Lessons</th>
+              <th>Time (min)</th>
+              <th>Avg score</th>
+              <th>Progress</th>
+              <th>Notes</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_entries %}
+              <tr>
+                <td>{{ p.date|date:"M d, Y" }}</td>
+                <td>{{ p.completed_lessons|default:0 }}</td>
+                <td>{{ p.time_spent_minutes|default:0 }}</td>
+                <td>{% if p.average_score %}{{ p.average_score|floatformat:1 }}%{% else %}—{% endif %}</td>
+                <td>{% if p.progress_percent %}{{ p.progress_percent }}%{% else %}—{% endif %}</td>
+                <td>{% if p.notes %}{{ p.notes|truncatechars:60 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                <td>{{ p.updated_at|naturaltime }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted" style="margin-top:.5rem;">No recent activity.</p>
+    {% endif %}
+  </section>
+
+  <div style="margin-top:1rem;">
+    <a href="{% url 'parents:dashboard' %}">Back to dashboard</a>
+  </div>
+</div>
+{% endblock %}

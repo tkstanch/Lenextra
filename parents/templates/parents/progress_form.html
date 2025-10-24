@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width:760px;margin:1.5rem auto;padding:0 1rem;">
+  <h1>Record Student Progress</h1>
+  <p class="muted">Create or update a daily progress entry for a linked student.</p>
+
+  <div class="card" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+      {% if form.non_field_errors %}
+        <div style="color:#b91c1c;margin:.5rem 0;">
+          {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;">
+        {% for field in form.visible_fields %}
+          <label style="display:block;">
+            <span class="muted">{{ field.label }}{% if field.field.required %} *{% endif %}</span>
+            {{ field }}
+            {% if field.help_text %}
+              <div class="muted" style="font-size:.85rem;">{{ field.help_text }}</div>
+            {% endif %}
+            {% for err in field.errors %}
+              <div style="color:#b91c1c;font-size:.9rem;margin-top:.25rem;">{{ err }}</div>
+            {% endfor %}
+          </label>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top:1rem;display:flex;gap:.5rem;">
+        <button type="submit" class="btn" style="padding:.55rem .9rem;border-radius:6px;border:1px solid #111827;background:#111827;color:#fff;">Save</button>
+        <a href="javascript:history.back()" class="btn" style="padding:.55rem .9rem;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827;">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

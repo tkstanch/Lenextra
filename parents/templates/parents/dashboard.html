@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="max-width:1100px;margin:1.5rem auto;padding:0 1rem;">
+  <header style="margin-bottom:1rem;">
+    <h1 style="margin:0;">Parents Dashboard</h1>
+    <p class="muted" style="margin:.25rem 0 0;">
+      Welcome, {{ profile.user.get_full_name|default:profile.user.username|default:request.user.username }}
+    </p>
+  </header>
+
+  <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#fff;">
+    <h2 style="margin-top:0;">Linked Students</h2>
+    {% with students_qs=students|default:profile.students.all %}
+      {% if students_qs %}
+        <ul style="margin:.5rem 0 0; padding-left:1.1rem;">
+          {% for s in students_qs %}
+            <li style="margin:.35rem 0;">
+              <strong>{{ s.user.get_full_name|default:s.user.username|default:"Student" }}</strong>
+              {% if s.user.email %}<span class="muted"> • {{ s.user.email }}</span>{% endif %}
+              <span style="display:inline-block;padding:.1rem .5rem;border-radius:999px;font-size:.8rem;background:#eef2ff;color:#3730a3;">#{{ s.id }}</span>
+              <span class="actions" style="margin-left:.5rem;">
+                <a href="{% url 'parents:student_overview' s.id %}">View progress</a>
+                <a href="{% url 'parents:progress_add' %}">Add entry</a>
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="muted">No students linked yet.</p>
+      {% endif %}
+    {% endwith %}
+  </section>
+
+  <div style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));margin-top:1rem;">
+    <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#fff;">
+      <h3 style="margin-top:0;">Today’s Summary{% if today %} — {{ today|date:"M d, Y" }}{% endif %}</h3>
+      {% if today_progress %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;">
+          {% for p in today_progress %}
+            <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:.75rem;">
+              <div class="muted" style="font-size:.85rem;">
+                {{ p.student.user.get_full_name|default:p.student.user.username|default:"Student" }}
+              </div>
+              <div style="margin-top:.35rem;">
+                <strong>{{ p.completed_lessons|default:0 }}</strong> lessons •
+                <strong>{{ p.time_spent_minutes|default:0 }}</strong> min
+                {% if p.progress_percent %} • <strong>{{ p.progress_percent }}%</strong>{% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="muted">No entries for today.</p>
+      {% endif %}
+    </section>
+
+    <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#fff;">
+      <h3 style="margin-top:0;">Quick Add</h3>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;">
+          {% for field in form.visible_fields %}
+            <label style="font-size:.9rem;">
+              <div class="muted" style="margin-bottom:.2rem;">{{ field.label }}{% if field.field.required %} *{% endif %}</div>
+              {{ field }}
+              {% if field.help_text %}<div class="muted" style="font-size:.8rem;">{{ field.help_text }}</div>{% endif %}
+              {% for err in field.errors %}<div style="color:#b91c1c; font-size:.85rem;">{{ err }}</div>{% endfor %}
+            </label>
+          {% endfor %}
+        </div>
+        {% if form.non_field_errors %}
+          <div style="color:#b91c1c; margin-top:.5rem;">
+            {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+          </div>
+        {% endif %}
+        <div style="margin-top:.75rem;">
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#fff;margin-top:1rem;">
+    <h3 style="margin-top:0;">Recent Activity</h3>
+    {% if recent_progress %}
+      <div style="overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Student</th>
+              <th>Lessons</th>
+              <th>Time (min)</th>
+              <th>Avg score</th>
+              <th>Progress</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in recent_progress %}
+              <tr>
+                <td>{{ p.date|date:"M d, Y" }}</td>
+                <td>{{ p.student.user.get_full_name|default:p.student.user.username|default:"Student" }}</td>
+                <td>{{ p.completed_lessons|default:0 }}</td>
+                <td>{{ p.time_spent_minutes|default:0 }}</td>
+                <td>{% if p.average_score %}{{ p.average_score }}%{% else %}—{% endif %}</td>
+                <td>{% if p.progress_percent %}{{ p.progress_percent }}%{% else %}—{% endif %}</td>
+                <td>{{ p.updated_at|naturaltime }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">No recent activity.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

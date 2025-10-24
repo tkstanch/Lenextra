@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Businesses{% endblock %}
+
+{% block content %}
+  {% include "organizations/_messages.html" %}
+
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <h1 style="margin:0;">Businesses</h1>
+    {% if request.user.is_staff %}
+      <a class="btn" href="{% url 'organizations:business_create' %}">+ New Business</a>
+    {% endif %}
+  </div>
+
+  <form method="get" class="filters" style="margin:1rem 0;display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+    <div>
+      <label style="font-size:.9rem;color:#333;">Search</label>
+      <input type="search" name="q" value="{{ request.GET.q|default_if_none:'' }}" placeholder="name, email, phone">
+    </div>
+    <div>
+      <label style="font-size:.9rem;color:#333;">Industry</label>
+      <select name="industry">
+        <option value="">Any</option>
+        {% for ind in industries %}
+          <option value="{{ ind }}" {% if request.GET.industry == ind %}selected{% endif %}>{{ ind }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label style="font-size:.9rem;color:#333;">City</label>
+      <input type="search" name="city" value="{{ request.GET.city|default_if_none:'' }}">
+    </div>
+    <div>
+      <label style="font-size:.9rem;color:#333;">Country</label>
+      <input type="search" name="country" value="{{ request.GET.country|default_if_none:'' }}">
+    </div>
+    <div>
+      <button class="btn" type="submit">Filter</button>
+      <a class="btn btn-secondary" href=".">Reset</a>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Industry</th>
+          <th>City</th>
+          <th>Country</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for business in businesses %}
+          <tr>
+            <td>
+              {% if business.get_absolute_url %}
+                <a href="{{ business.get_absolute_url }}">{{ business.name }}</a>
+              {% else %}
+                {{ business.name }}
+              {% endif %}
+              {% if business.partnerships_count %}<div style="color:#6b7280;font-size:.85rem;">Partnerships: {{ business.partnerships_count }}</div>{% endif %}
+            </td>
+            <td>{{ business.industry|default:"—" }}</td>
+            <td>{{ business.city|default:"—" }}</td>
+            <td>{{ business.country|default:"—" }}</td>
+            <td>{% if business.email %}<a href="mailto:{{ business.email }}">{{ business.email }}</a>{% else %}—{% endif %}</td>
+            <td>{% if business.phone %}<a href="tel:{{ business.phone }}">{{ business.phone }}</a>{% else %}—{% endif %}</td>
+            <td style="text-align:right; white-space:nowrap;">
+              {% if business.slug %}
+                <a href="{% url 'organizations:business_update' business.slug %}">Edit</a>
+              {% else %}
+                <a href="{% url 'organizations:business_update' business.id %}">Edit</a>
+              {% endif %}
+              {% if request.user.is_staff %} ·
+                {% if business.slug %}
+                  <a href="{% url 'organizations:business_detail' business.slug %}">View</a>
+                {% else %}
+                  <a href="{% url 'organizations:business_detail' business.id %}">View</a>
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7">No businesses found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include "organizations/_pagination.html" with page=businesses %}
+
+  <style>
+    .btn { padding:.5rem .75rem; border:1px solid #ccc; border-radius:4px; text-decoration:none; display:inline-block; }
+    .btn-secondary { background:#f6f6f6; }
+    .table { width:100%; border-collapse:collapse; }
+    .table th, .table td { padding:.6rem; border-bottom:1px solid #eee; text-align:left; }
+    .table thead th { border-bottom:2px solid #ddd; }
+    .table-responsive { overflow-x:auto; }
+    label { font-size:.9rem; color:#333; }
+    input[type="search"], select { padding:.4rem .5rem; border:1px solid #ccc; border-radius:4px; }
+  </style>
+{% endblock %}

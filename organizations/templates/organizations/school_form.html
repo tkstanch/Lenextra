@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {% if school and school.pk %}Edit School{% else %}Create School{% endif %}
+{% endblock %}
+
+{% block content %}
+  {% include "organizations/_messages.html" %}
+
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <h1 style="margin:0;">{% if school and school.pk %}Edit School{% else %}Create School{% endif %}</h1>
+    <a class="btn btn-secondary" href="{% url 'organizations:school_list' %}">Back to Schools</a>
+  </div>
+
+  <div class="card" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;margin-top:1rem;max-width:900px;">
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div style="color:#b91c1c;margin-bottom:.75rem;">
+          {% for err in form.non_field_errors %}<div>{{ err }}</div>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.9rem;">
+        {% for field in form.visible_fields %}
+          <label style="display:block;">
+            <div style="font-size:.9rem;color:#374151;margin-bottom:.25rem;">
+              {{ field.label }}{% if field.field.required %} *{% endif %}
+            </div>
+            {{ field }}
+            {% if field.help_text %}
+              <div style="color:#6b7280;font-size:.85rem;margin-top:.2rem;">{{ field.help_text }}</div>
+            {% endif %}
+            {% for err in field.errors %}
+              <div style="color:#b91c1c;font-size:.9rem;margin-top:.25rem;">{{ err }}</div>
+            {% endfor %}
+          </label>
+        {% endfor %}
+      </div>
+
+      {% for field in form.hidden_fields %}{{ field }}{% endfor %}
+
+      <div style="margin-top:1rem;display:flex;gap:.5rem;">
+        <button type="submit" class="btn" style="padding:.55rem .9rem;border-radius:6px;border:1px solid #111827;background:#111827;color:#fff;">
+          Save
+        </button>
+        <a href="{% url 'organizations:school_list' %}" class="btn btn-secondary" style="padding:.55rem .9rem;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827;">
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <style>
+    .btn { text-decoration:none; display:inline-block; }
+    .btn-secondary { background:#f6f6f6; }
+    input, select, textarea { width:100%; padding:.5rem .6rem; border:1px solid #d1d5db; border-radius:6px; }
+  </style>
+{% endblock %}

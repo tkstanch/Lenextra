@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Organization Tasks{% endblock %}
+{% block content %}
+<h1>Open Tasks</h1>
+<div>
+  {% for t in tasks %}
+    <div class="card">
+      <h3>{{ t.title }}</h3>
+      <p>{{ t.description }}</p>
+      <p><strong>Business:</strong> {{ t.business.name }} | <strong>Points:</strong> {{ t.points }}</p>
+      {% if user.is_authenticated %}
+        <form method="post" action="{% url 'organizations:task_apply' t.id %}">{% csrf_token %}
+          <input type="text" name="motivation" placeholder="Why are you a good fit?" />
+          <button type="submit" class="btn btn-primary">Apply</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary">Login to Apply</a>
+      {% endif %}
+    </div>
+  {% empty %}
+    <p>No tasks available.</p>
+  {% endfor %}
+</div>
+{% endblock %}

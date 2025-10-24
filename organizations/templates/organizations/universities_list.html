@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Universities{% endblock %}
+{% block content %}
+<h1>Universities</h1>
+<p><a class="btn btn-primary" href="{% url 'organizations:university_create' %}">Add University</a></p>
+<table>
+  <thead><tr><th>Name</th><th>City</th><th>Country</th><th></th></tr></thead>
+  <tbody>
+    {% for u in universities %}
+      <tr>
+        <td>{{ u.name }}</td>
+        <td>{{ u.city }}</td>
+        <td>{{ u.country }}</td>
+        <td><a href="{% url 'organizations:university_update' u.pk %}">Edit</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4">No universities yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

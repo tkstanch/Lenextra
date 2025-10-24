@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Track Student — {{ business.name }}{% endblock %}
+
+{% block content %}
+  {% include "organizations/_messages.html" %}
+
+  <h1>Track a Student for {{ business.name }}</h1>
+  <p>Only students with consent and an active partnership with {{ business.name }}’s partner schools are listed.</p>
+
+  <div class="layout" style="display:grid;grid-template-columns:1fr;gap:1.25rem;">
+    <div class="card" style="padding:1rem;border:1px solid #eee;border-radius:8px;">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <!-- Student field with quick search -->
+        <div class="field">
+          <label for="studentFilter">Student</label>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            <input id="studentFilter" type="search" placeholder="Type to find a student…" style="flex:1;min-width:220px;">
+            <span id="studentMatchInfo" style="font-size:.85rem;color:#555;"></span>
+          </div>
+          <div style="margin-top:.5rem;">
+            {{ form.student.errors }}
+            {{ form.student }}
+          </div>
+        </div>
+
+        <!-- Stage with quick-set buttons -->
+        <div class="field">
+          <label for="{{ form.stage.id_for_label }}">Stage</label>
+          <div style="margin:.25rem 0;">
+            <small>Quick set:</small>
+            <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.25rem;">
+              <button class="btn btn-secondary stage-btn" data-stage="interested" type="button">Interested</button>
+              <button class="btn btn-secondary stage-btn" data-stage="shortlisted" type="button">Shortlisted</button>
+              <button class="btn btn-secondary stage-btn" data-stage="interviewing" type="button">Interviewing</button>
+              <button class="btn btn-secondary stage-btn" data-stage="offered" type="button">Offered</button>
+              <button class="btn btn-secondary stage-btn" data-stage="hired" type="button">Hired</button>
+              <button class="btn btn-secondary stage-btn" data-stage="rejected" type="button">Rejected</button>
+            </div>
+          </div>
+          {{ form.stage.errors }}
+          {{ form.stage }}
+        </div>
+
+        <!-- Reason (char counter) -->
+        <div class="field">
+          <label for="{{ form.tracking_reason.id_for_label }}">Tracking reason</label>
+          {{ form.tracking_reason.errors }}
+          {{ form.tracking_reason|add_class:"with-counter" }}
+          <div class="counter" data-for="{{ form.tracking_reason.auto_id }}" data-max="255"></div>
+        </div>
+
+        <!-- Notes (char counter) -->
+        <div class="field">
+          <label for="{{ form.notes.id_for_label }}">Notes</label>
+          {{ form.notes.errors }}
+          {{ form.notes|add_class:"with-counter" }}
+          <div class="counter" data-for="{{ form.notes.auto_id }}"></div>
+        </div>
+
+        <!-- Source -->
+        <div class="field">
+          <label for="{{ form.source.id_for_label }}">Source</label>
+          {{ form.source.errors }}
+          {{ form.source }}
+        </div>
+
+        <!-- Last contacted with “Now” -->
+        <div class="field">
+          <label for="{{ form.last_contacted.id_for_label }}">Last contacted</label>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            {{ form.last_contacted.errors }}
+            {{ form.last_contacted }}
+            <button id="nowBtn" class="btn btn-secondary" type="button">Now</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
+          <button class="btn" type="submit">Add to Tracking</button>
+          <a class="btn btn-secondary" href="{% url 'organizations:business_tracked_students_slug' business.slug %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" style="padding:1rem;border:1px solid #eee;border-radius:8px;">
+      <h3 style="margin-top:0;">Eligibility & Tips</h3>
+      <ul>
+        <li>Only students who consent to tracking are eligible.</li>
+        <li>Students must belong to a school with an active partnership with {{ business.name }}.</li>
+        <li>Already-tracked students are excluded from the list.</li>
+      </ul>
+      <p style="margin:.5rem 0 0 0;"><strong>Eligible students currently listed:</strong> <span id="eligibleCount">—</span></p>
+    </div>
+  </div>
+
+  <style>
+    .btn { padding:.5rem .75rem; border:1px solid #ccc; border-radius:4px; text-decoration:none; display:inline-inline; background:#fff; cursor:pointer; }
+    .btn-secondary { background:#f6f6f6; }
+    .field { margin-bottom:1rem; }
+    .with-counter { width:100%; }
+    .counter { font-size:.8rem; color:#666; margin-top:.25rem; }
+    select, input[type="search"], input[type="text"], textarea, input[type="datetime-local"] {
+      padding:.45rem .5rem; border:1px solid #ccc; border-radius:4px; width:100%; max-width:600px;
+    }
+  </style>
+
+  <script>
+    (function () {
+      // Utilities
+      const $ = (sel, ctx=document) => ctx.querySelector(sel);
+      const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+      const norm = s => (s || '').toString().toLowerCase().trim();
+
+      // Elements
+      const studentSelect = $('#id_student');
+      const studentFilter = $('#studentFilter');
+      const matchInfo = $('#studentMatchInfo');
+      const eligibleCount = $('#eligibleCount');
+      const stageSelect = $('#id_stage');
+      const stageBtns = $$('.stage-btn');
+      const nowBtn = $('#nowBtn');
+
+      // Initialize eligible count
+      function updateEligibleCount() {
+        if (!studentSelect) return;
+        const total = studentSelect.options.length ? studentSelect.options.length - (studentSelect.options[0].value === '' ? 1 : 0) : 0;
+        eligibleCount.textContent = total;
+      }
+
+      // Student quick search: selects first match
+      function onStudentFilter() {
+        const q = norm(studentFilter.value);
+        if (!q) {
+          matchInfo.textContent = '';
+          return;
+        }
+        let matches = 0;
+        let firstMatchIndex = -1;
+        for (let i = 0; i < studentSelect.options.length; i++) {
+          const opt = studentSelect.options[i];
+          const label = norm(opt.text);
+          if (opt.value && label.includes(q)) {
+            if (firstMatchIndex === -1) firstMatchIndex = i;
+            matches++;
+          }
+        }
+        if (firstMatchIndex >= 0) {
+          studentSelect.selectedIndex = firstMatchIndex;
+          studentSelect.dispatchEvent(new Event('change'));
+        }
+        matchInfo.textContent = matches ? `${matches} match${matches > 1 ? 'es' : ''}` : 'No matches';
+      }
+
+      // Stage quick buttons
+      stageBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const val = btn.getAttribute('data-stage');
+          if (!stageSelect) return;
+          stageSelect.value = val;
+          stageSelect.dispatchEvent(new Event('change'));
+        });
+      });
+
+      // Last contacted "Now" button
+      function toLocalDatetimeValue(d) {
+        // Convert to YYYY-MM-DDTHH:mm for datetime-local
+        const pad = n => String(n).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        const mm = pad(d.getMonth() + 1);
+        const dd = pad(d.getDate());
+        const hh = pad(d.getHours());
+        const mi = pad(d.getMinutes());
+        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+      }
+      nowBtn?.addEventListener('click', () => {
+        const input = $('#id_last_contacted');
+        if (input) input.value = toLocalDatetimeValue(new Date());
+      });
+
+      // Character counters
+      function attachCounter(counterEl) {
+        const targetId = counterEl.getAttribute('data-for');
+        const max = parseInt(counterEl.getAttribute('data-max') || '0', 10);
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        const update = () => {
+          const len = (input.value || '').length;
+          if (max > 0) {
+            counterEl.textContent = `${len}/${max} characters`;
+          } else {
+            counterEl.textContent = `${len} characters`;
+          }
+        };
+        input.addEventListener('input', update);
+        update();
+      }
+      $$('.counter').forEach(attachCounter);
+
+      // Events
+      studentFilter.addEventListener('input', onStudentFilter);
+
+      // Init
+      updateEligibleCount();
+    })();
+  </script>
+{% endblock %}

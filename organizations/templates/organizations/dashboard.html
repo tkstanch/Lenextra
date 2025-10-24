@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Organizations Dashboard{% endblock %}
+
+{% block content %}
+  {% include "organizations/_messages.html" %}
+
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <h1 style="margin:0;">Organizations Dashboard</h1>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+      <a class="btn" href="{% url 'organizations:school_list' %}">Schools</a>
+      <a class="btn" href="{% url 'organizations:business_list' %}">Businesses</a>
+    </div>
+  </div>
+
+  <div class="kpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-top:1rem;">
+    <div style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+      <div style="color:#6b7280;">Schools</div>
+      <div style="font-size:1.5rem;font-weight:600;">{{ schools_count|default:0 }}</div>
+    </div>
+    <div style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+      <div style="color:#6b7280;">Businesses</div>
+      <div style="font-size:1.5rem;font-weight:600;">{{ businesses_count|default:0 }}</div>
+    </div>
+    <div style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+      <div style="color:#6b7280;">Partnerships (Active)</div>
+      <div style="font-size:1.5rem;font-weight:600;">
+        {{ active_partnerships_count|default:0 }} / {{ partnerships_count|default:0 }}
+      </div>
+    </div>
+    <div style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+      <div style="color:#6b7280;">Tracked Students</div>
+      <div style="font-size:1.5rem;font-weight:600;">{{ tracked_students_count|default:0 }}</div>
+    </div>
+  </div>
+
+  <section style="margin-top:1.25rem;">
+    <h2 style="margin:.25rem 0;">Recent Partnerships</h2>
+    {% firstof recent_partnerships partnerships as items %}
+    {% if items %}
+      <div class="table-responsive">
+        <table class="table" style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Business</th>
+              <th>School</th>
+              <th>Status</th>
+              <th>Start</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in items %}
+              <tr>
+                <td>{{ p.business.name|default:"—" }}</td>
+                <td>{{ p.school.name|default:"—" }}</td>
+                <td>{{ p.status|title|default:"—" }}</td>
+                <td>{% if p.start_date %}{{ p.start_date|date:"M d, Y" }}{% else %}—{% endif %}</td>
+                <td>{% if p.created_at %}{{ p.created_at|date:"M d, Y H:i" }}{% else %}—{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="muted">No partnerships to display.</p>
+    {% endif %}
+  </section>
+
+  <section style="margin-top:1.25rem;">
+    <h2 style="margin:.25rem 0;">Top Schools</h2>
+    {% if top_schools %}
+      <ul>
+        {% for s in top_schools %}
+          <li>{{ s.name }}{% if s.partnerships__count %} — {{ s.partnerships__count }} partnerships{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No schools yet.</p>
+    {% endif %}
+  </section>
+
+  <section style="margin-top:1.25rem;">
+    <h2 style="margin:.25rem 0;">Top Businesses</h2>
+    {% if top_businesses %}
+      <ul>
+        {% for b in top_businesses %}
+          <li>{{ b.name }}{% if b.partnerships__count %} — {{ b.partnerships__count }} partnerships{% endif %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">No businesses yet.</p>
+    {% endif %}
+  </section>
+
+  <style>
+    .btn { padding:.5rem .75rem; border:1px solid #ccc; border-radius:4px; text-decoration:none; display:inline-block; }
+    .table th, .table td { padding:.6rem; border-bottom:1px solid #eee; text-align:left; }
+    .table thead th { border-bottom:2px solid #ddd; }
+    .table-responsive { overflow-x:auto; }
+  </style>
+{% endblock %}

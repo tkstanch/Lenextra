@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block content %}
+<div class="container" style="max-width:1100px;margin:1.5rem auto;padding:0 1rem;">
+  <header style="margin-bottom:1rem;">
+    <h1 style="margin:0;">Student Progress</h1>
+    {% if student %}
+      <p class="muted" style="margin:.25rem 0 0;">
+        For: {{ student.user.get_full_name|default:student.user.username|default:"Student" }}
+        <span style="display:inline-block;padding:.1rem .5rem;border-radius:999px;font-size:.8rem;background:#eef2ff;color:#3730a3;">ID #{{ student.id }}</span>
+      </p>
+    {% endif %}
+  </header>
+
+  <section class="card" style="border:1px solid #e5e7eb;border-radius:8px;background:#fff;padding:1rem;">
+    <div style="display:flex;gap:.75rem;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+      <form method="get" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:.5rem;flex:1;">
+        <div>
+          <label class="muted" style="font-size:.9rem;">From</label>
+          <input type="date" name="date_from" value="{{ request.GET.date_from|default:'' }}">
+        </div>
+        <div>
+          <label class="muted" style="font-size:.9rem;">To</label>
+          <input type="date" name="date_to" value="{{ request.GET.date_to|default:'' }}">
+        </div>
+        <div>
+          <label class="muted" style="font-size:.9rem;">Search notes</label>
+          <input type="text" name="q" placeholder="e.g. homework" value="{{ request.GET.q|default:'' }}">
+        </div>
+        <div style="align-self:end;">
+          <button type="submit" class="btn" style="padding:.5rem .8rem;border-radius:6px;border:1px solid #111827;background:#111827;color:#fff;">Filter</button>
+          <a href="." class="btn" style="padding:.5rem .8rem;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827;">Reset</a>
+        </div>
+      </form>
+
+      <div class="actions" style="display:flex;gap:.5rem;">
+        <a href="{% url 'parents:progress_add' %}" class="btn" style="padding:.5rem .8rem;border-radius:6px;border:1px solid #111827;background:#111827;color:#fff;">Add entry</a>
+        <a href="{% url 'parents:dashboard' %}" class="btn" style="padding:.5rem .8rem;border-radius:6px;border:1px solid #d1d5db;background:#fff;color:#111827;">Back to dashboard</a>
+      </div>
+    </div>
+
+    <div style="margin:.75rem 0;">
+      {% if totals %}
+        <span class="muted">Entries: </span><strong>{{ totals.count }}</strong>
+        <span class="muted" style="margin-left:.75rem;">Lessons: </span><strong>{{ totals.completed_lessons|default:"—" }}</strong>
+        <span class="muted" style="margin-left:.75rem;">Minutes: </span><strong>{{ totals.time_spent_minutes|default:"—" }}</strong>
+        {% if totals.avg_score %}<span class="muted" style="margin-left:.75rem;">Avg score: </span><strong>{{ totals.avg_score|floatformat:2 }}%</strong>{% endif %}
+        {% if totals.avg_progress %}<span class="muted" style="margin-left:.75rem;">Avg progress: </span><strong>{{ totals.avg_progress|floatformat:0 }}%</strong>{% endif %}
+      {% endif %}
+    </div>
+
+    {% if entries %}
+      <div style="overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Lessons</th>
+              <th>Time (min)</th>
+              <th>Avg score</th>
+              <th>Progress</th>
+              <th>Notes</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in entries %}
+              <tr>
+                <td>{{ p.date|date:"M d, Y" }}</td>
+                <td>{{ p.completed_lessons|default:0 }}</td>
+                <td>{{ p.time_spent_minutes|default:0 }}</td>
+                <td>{% if p.average_score %}{{ p.average_score|floatformat:2 }}%{% else %}—{% endif %}</td>
+                <td>{% if p.progress_percent %}{{ p.progress_percent }}%{% else %}—{% endif %}</td>
+                <td>{% if p.notes %}{{ p.notes|truncatechars:60 }}{% else %}<span class="muted">—</span>{% endif %}</td>
+                <td>{{ p.updated_at|naturaltime }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if is_paginated and page_obj %}
+        {% with params=request.GET.urlencode %}
+        <nav aria-label="Pagination" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+          {% if page_obj.has_previous %}
+            <a href="?{% if params %}{{ params }}&{% endif %}page=1">First</a>
+            <a href="?{% if params %}{{ params }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?{% if params %}{{ params }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+            <a href="?{% if params %}{{ params }}&{% endif %}page={{ page_obj.paginator.num_pages }}">Last</a>
+          {% endif %}
+        </nav>
+        {% endwith %}
+      {% endif %}
+    {% else %}
+      <p class="muted">No progress entries found.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

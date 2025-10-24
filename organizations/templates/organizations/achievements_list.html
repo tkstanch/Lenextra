@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}My Achievements{% endblock %}
+{% block content %}
+<h1>My Achievements</h1>
+<ul>
+  {% for ach in achievements %}
+    <li>
+      <strong>{{ ach.title }}</strong>
+      — {{ ach.points }} pts — {{ ach.business.name }}
+      <small class="text-muted">on {{ ach.issued_at|date:"Y-m-d H:i" }}</small>
+    </li>
+  {% empty %}
+    <li>No achievements yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

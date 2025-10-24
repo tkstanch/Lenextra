@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Track a Student{% endblock %}
+{% block content %}
+<h1>Track a Student</h1>
+<form method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-success" type="submit">Save</button>
+  <a class="btn" href="{% url 'organizations:tracked_students' %}">Cancel</a>
+</form>
+{% endblock %}

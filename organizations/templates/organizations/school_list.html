@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block title %}Schools{% endblock %}
+
+{% block content %}
+  {% include "organizations/_messages.html" %}
+
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+    <h1 style="margin:0;">Schools</h1>
+    {% if request.user.is_staff %}
+      <a class="btn" href="{% url 'organizations:school_create' %}">+ New School</a>
+    {% endif %}
+  </div>
+
+  <div class="filters" style="margin:1rem 0;display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end;">
+    <div>
+      <label for="searchInput">Search</label><br>
+      <input id="searchInput" type="search" placeholder="Search by name/city/country…" />
+    </div>
+    <div>
+      <label for="cityFilter">City</label><br>
+      <select id="cityFilter"><option value="">All cities</option></select>
+    </div>
+    <div>
+      <label for="countryFilter">Country</label><br>
+      <select id="countryFilter"><option value="">All countries</option></select>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center;">
+      <span id="rowCount"></span>
+      <button id="exportCsvBtn" class="btn btn-secondary" type="button">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table id="schoolsTable" class="table">
+      <thead>
+        <tr>
+          <th style="min-width:240px;">Name</th>
+          <th>City</th>
+          <th>Country</th>
+          <th>Capacity</th>
+          <th>Ranking</th>
+          <th>Partnerships</th>
+          <th style="min-width:100px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for school in schools %}
+          <tr
+            data-name="{{ school.name }}"
+            data-city="{{ school.city|default:'' }}"
+            data-country="{{ school.country|default:'' }}"
+          >
+            <td><a href="{% url 'organizations:school_detail' school.slug %}">{{ school.name }}</a></td>
+            <td>{{ school.city|default:"-" }}</td>
+            <td>{{ school.country|default:"-" }}</td>
+            <td>{{ school.capacity|default:"-" }}</td>
+            <td>{{ school.ranking|default:"-" }}</td>
+            <td>{{ school.partnerships.count }}</td>
+            <td>
+              <a href="{% url 'organizations:school_detail' school.slug %}">View</a>
+              {% if request.user.is_staff %} · <a href="{% url 'organizations:school_update' school.slug %}">Edit</a>{% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7">No schools found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% include "organizations/_pagination.html" with page=schools %}
+
+  <style>
+    .btn { padding:.5rem .75rem; border:1px solid #ccc; border-radius:4px; text-decoration:none; display:inline-block; }
+    .btn-secondary { background:#f6f6f6; }
+    .table { width:100%; border-collapse:collapse; }
+    .table th, .table td { padding:.6rem; border-bottom:1px solid #eee; text-align:left; }
+    .table thead th { border-bottom:2px solid #ddd; }
+    .table-responsive { overflow-x:auto; }
+    label { font-size:.9rem; color:#333; }
+    input[type="search"], select { padding:.4rem .5rem; border:1px solid #ccc; border-radius:4px; }
+  </style>
+
+  <script>
+    (function () {
+      const table = document.getElementById('schoolsTable');
+      const rows = Array.from(table.querySelectorAll('tbody tr'));
+      const searchInput = document.getElementById('searchInput');
+      const cityFilter = document.getElementById('cityFilter');
+      const countryFilter = document.getElementById('countryFilter');
+      const rowCount = document.getElementById('rowCount');
+      const exportBtn = document.getElementById('exportCsvBtn');
+
+      function normalize(s) { return (s || '').toString().toLowerCase().trim(); }
+
+      // Build filter options from rows
+      function initFilters() {
+        const cities = new Set();
+        const countries = new Set();
+        rows.forEach(tr => {
+          const c = tr.getAttribute('data-city');
+          const k = tr.getAttribute('data-country');
+          if (c) cities.add(c);
+          if (k) countries.add(k);
+        });
+        [...cities].sort().forEach(c => {
+          const o = document.createElement('option'); o.value = c; o.textContent = c; cityFilter.appendChild(o);
+        });
+        [...countries].sort().forEach(k => {
+          const o = document.createElement('option'); o.value = k; o.textContent = k; countryFilter.appendChild(o);
+        });
+      }
+
+      function applyFilters() {
+        const q = normalize(searchInput.value);
+        const city = normalize(cityFilter.value);
+        const country = normalize(countryFilter.value);
+        let visible = 0;
+
+        rows.forEach(tr => {
+          const name = normalize(tr.getAttribute('data-name'));
+          const c = normalize(tr.getAttribute('data-city'));
+          const k = normalize(tr.getAttribute('data-country'));
+
+          const qOk = !q || name.includes(q) || c.includes(q) || k.includes(q);
+          const cityOk = !city || c === city;
+          const countryOk = !country || k === country;
+
+          const show = qOk && cityOk && countryOk;
+          tr.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+
+        rowCount.textContent = visible + ' of ' + rows.length;
+      }
+
+      function exportCSV() {
+        const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.innerText.trim());
+        const visibleRows = rows.filter(tr => tr.style.display !== 'none');
+        const body = visibleRows.map(tr => {
+          // Extract first 6 columns (skip Actions)
+          const cells = Array.from(tr.children).slice(0, 6);
+          return cells.map(td => `"${td.innerText.replace(/\s+/g, ' ').trim().replace(/"/g, '""')}"`).join(',');
+        });
+        const csv = [headers.slice(0, 6).join(','), ...body].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'schools.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      initFilters();
+      applyFilters();
+      searchInput.addEventListener('input', applyFilters);
+      cityFilter.addEventListener('change', applyFilters);
+      countryFilter.addEventListener('change', applyFilters);
+      exportBtn?.addEventListener('click', exportCSV);
+    })();
+  </script>
+{% endblock %}

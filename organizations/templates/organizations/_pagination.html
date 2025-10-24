@@ -1,0 +1,21 @@
+{% if page and page.paginator.num_pages > 1 %}
+  {% with params=request.GET.urlencode %}
+  <nav aria-label="Pagination" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem;">
+    {% if page.has_previous %}
+      <a href="?page=1{% if params %}&{{ params }}{% endif %}">First</a>
+      <a href="?page={{ page.previous_page_number }}{% if params %}&{{ params }}{% endif %}">Previous</a>
+    {% endif %}
+
+    <span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+
+    {% if page.has_next %}
+      <a href="?page={{ page.next_page_number }}{% if params %}&{{ params }}{% endif %}">Next</a>
+      <a href="?page={{ page.paginator.num_pages }}{% if params %}&{{ params }}{% endif %}">Last</a>
+    {% endif %}
+  </nav>
+
+  <div style="color:#6b7280;font-size:.9rem;margin-top:.25rem;">
+    Showing {{ page.start_index }}–{{ page.end_index }} of {{ page.paginator.count }}
+  </div>
+  {% endwith %}
+{% endif %}

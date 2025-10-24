@@ -1,0 +1,9 @@
+{% if messages %}
+  <div class="django-messages" style="margin:.5rem 0;">
+    {% for message in messages %}
+      <div class="message {{ message.tags }}" role="status" style="padding:.6rem .8rem;border:1px solid #e5e7eb;border-radius:6px;margin:.35rem 0;background:#f9fafb;">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

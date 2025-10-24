@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ form.instance.pk|yesno:"Edit University,Add University" }}{% endblock %}
+{% block content %}
+<h1>{{ form.instance.pk|yesno:"Edit University,Add University" }}</h1>
+<form method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <button class="btn btn-success" type="submit">Save</button>
+  <a class="btn" href="{% url 'organizations:university_list' %}">Cancel</a>
+</form>
+{% endblock %}
