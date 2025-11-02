@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ project.name }}</title>
+</head>
+<body>
+    <h2>{{ project.name }}</h2>
+    <p><strong>Board:</strong> {{ project.board_fqbn }}</p>
+    <pre>{{ project.code }}</pre>
+    <a href="{% url 'arduino_projects:editor' project.pk %}">Edit</a>
+    <a href="{% url 'arduino_projects:project_list' %}">Back to Project List</a>
+</body>
+</html>

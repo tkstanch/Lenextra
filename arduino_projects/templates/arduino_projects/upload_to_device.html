@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload to Arduino Device</title>
+</head>
+<body>
+    <h2>Upload {{ project.name }} to Device</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label for="port">Device Port:</label>
+        <input type="text" name="port" placeholder="/dev/ttyACM0" required>
+        <button type="submit">Upload</button>
+    </form>
+    {% if upload_output %}
+        <h3>Upload Output:</h3>
+        <pre>{{ upload_output }}</pre>
+    {% endif %}
+    <a href="{% url 'arduino_projects:project_detail' project.pk %}">Back to Project</a>
+</body>
+</html>

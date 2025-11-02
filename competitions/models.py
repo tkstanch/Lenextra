@@ -1,3 +1,4 @@
+from __future__ import annotations
 from django.db import models, transaction
 from django.db.models import F, Index, Q
 from django.utils import timezone

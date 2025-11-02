@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'competitions.apps.CompetitionsConfig',  # ensure this line exists
     'chat.apps.ChatConfig',
     'live_classes.apps.LiveClassesConfig',  # KEEP only this
+    'arduino_projects',
 ]
 
 MIDDLEWARE = [
@@ -187,8 +188,12 @@ if DATABASE_URL:
 else:
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": str(BASE_DIR / "db.sqlite3"),
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "lenextra",
+            "USER": "lenextra",
+            "PASSWORD": "lenextra",
+            "HOST": "localhost",
+            "PORT": "5432",
         }
     }
 

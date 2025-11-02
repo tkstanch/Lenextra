@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Project</title>
+</head>
+<body>
+    <h2>Delete {{ project.name }}?</h2>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Confirm Delete</button>
+        <a href="{% url 'arduino_projects:project_list' %}">Cancel</a>
+    </form>
+</body>
+</html>

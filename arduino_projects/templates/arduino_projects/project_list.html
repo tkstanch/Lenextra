@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Arduino Projects</title>
+</head>
+<body>
+    <h2>My Arduino Projects</h2>
+    <ul>
+        {% for project in projects %}
+            <li>
+                <a href="{% url 'arduino_projects:project_detail' project.pk %}">{{ project.name }}</a>
+                (<a href="{% url 'arduino_projects:editor' project.pk %}">Edit</a>)
+                (<a href="{% url 'arduino_projects:project_confirm_delete' project.pk %}">Delete</a>)
+            </li>
+        {% empty %}
+            <li>No projects yet.</li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'arduino_projects:editor' %}">Create New Project</a>
+</body>
+</html>

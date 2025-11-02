@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Arduino Project Editor</title>
+</head>
+<body>
+    <h2>Create/Edit Arduino Project</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save</button>
+    </form>
+    <a href="{% url 'arduino_projects:project_list' %}">Back to Project List</a>
+</body>
+</html>

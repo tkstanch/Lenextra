@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product List</title>
+    <link rel="stylesheet" href="{% static 'marketplace/css/styles.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Available Tech Products</h1>
+        <a href="{% url 'product_sell_form' %}">Sell Your Product</a>
+    </header>
+    <main>
+        <ul>
+            {% for product in products %}
+                <li>
+                    <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a> - {{ product.price }} {{ product.currency }}
+                </li>
+            {% empty %}
+                <li>No products available at the moment.</li>
+            {% endfor %}
+        </ul>
+    </main>
+    <footer>
+        <p>&copy; {{ current_year }} E-learning Marketplace</p>
+    </footer>
+</body>
+</html>
