@@ -43,6 +43,8 @@ urlpatterns = [
     path("live/", include("live_classes.urls", namespace="live_classes")),
     path("api/live/", include("live_classes.api.urls", namespace="live_api")),
     path("api/orgs/", include("organizations.api.urls", namespace="org_api")),
+    path('labs/', include('practice_labs.urls')),
+    path('api/labs/', include('practice_labs.api_urls')),
 ]
 
 

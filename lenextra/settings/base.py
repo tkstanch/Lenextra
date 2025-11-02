@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'chat.apps.ChatConfig',
     'live_classes.apps.LiveClassesConfig',  # KEEP only this
     'arduino_projects',
+    'practice_labs',
 ]
 
 MIDDLEWARE = [

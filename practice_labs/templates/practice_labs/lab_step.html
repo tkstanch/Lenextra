@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ lab.title }} - Step {{ step.order }}{% endblock %}
+{% block content %}
+<h2>{{ lab.title }} ({{ lab.language }})</h2>
+<p><strong>Step {{ step.order }}:</strong> {{ step.instruction }}</p>
+<textarea id="user-code" rows="10" cols="60" placeholder="Write your code here..."></textarea>
+<br>
+<button onclick="submitCode()">Check Code</button>
+<div id="feedback"></div>
+<script>
+function submitCode() {
+    const code = document.getElementById('user-code').value;
+    fetch("{% url 'api_step_code_check' step.id %}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+        },
+        body: JSON.stringify({ code: code })
+    })
+    .then(response => response.json())
+    .then(data => {
+        let feedback = "";
+        if (data.correct) {
+            feedback += "<p style='color:green;'>Your code is correct!</p>";
+        } else {
+            feedback += "<p style='color:red;'>Your code is not correct.</p>";
+        }
+        feedback += "<p><strong>AI Hint:</strong> " + data.ai_hint + "</p>";
+        document.getElementById("feedback").innerHTML = feedback;
+    })
+    .catch(error => {
+        document.getElementById("feedback").innerHTML = "<p style='color:red;'>Error checking code.</p>";
+    });
+}
+</script>
+{% endblock %}

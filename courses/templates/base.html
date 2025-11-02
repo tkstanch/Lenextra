@@ -34,7 +34,7 @@
     <script>
       document.addEventListener('DOMContentLoaded', (event) => {
         // DOM loaded
-        {% block domready %}{% endblock %}
+        {{ block.domready|safe }}
       });
     </script>
     </body>

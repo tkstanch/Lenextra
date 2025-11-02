@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Practice Labs{% endblock %}
+
+{% block content %}
+<h2>Practice Labs</h2>
+<ul>
+  {% for lab in labs %}
+    <li>
+      <a href="{% url 'lab_detail' lab.id 0 %}">{{ lab.title }} ({{ lab.language }})</a>
+    </li>
+  {% empty %}
+    <li>No labs available.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

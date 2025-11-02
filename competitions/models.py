@@ -6,6 +6,7 @@ from django.utils.text import slugify
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from organizations import models as organizations
 
 # Create your models here.
 class TimeStampedModel(models.Model):

@@ -1,0 +1,53 @@
+": "application/json",
+        },
+    }).then(response => response.json()).then(data => {
+        document.getElementById('feedback').innerHTML = data.message;
+    });
+}
+</script>
+{% if feedback %}
+  <div class="feedback">{{ feedback }}</div>
+{% endif %}
+{% if form %}
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+  </form>
+{% endif %}
+{% if error %}
+  <div class="error">{{ error }}</div>
+{% endif %}
+{% if success %}
+  <div class="success">{{ success }}</div>
+{% endif %}
+{% if user %}
+  <div class="user-info">
+    <p>{{ user.username }}</p>
+  </div>
+{% endif %}
+{% if user.is_authenticated %}
+  <div class="user-info">
+    <p>{{ user.username }} ({{ user.email }})</p>
+  </div>
+{% endif %}
+{% if user.is_staff %}
+  <div class="user-info">
+    <p>{{ user.username }} ({{ user.email }})</p>
+  </div>
+{% endif %}
+{% if user.is_superuser %}
+  <div class="user-info">
+    <p>{{ user.username }} ({{ user.email }})</p>
+  </div>
+{% endif %}
+{% if user.is_active %}
+  <div class="user-info">
+    <p>{{ user.username }} ({{ user.email }})</p>
+  </div>
+{% endif %}
+{% if user.is_anonymous %}
+  <div class="user-info">
+    <p>{{ user.username }} ({{ user.email }})</p>
+  </div>
+{% endif %}
